@@ -159,6 +159,9 @@ import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.vm.snapshot.VMSnapshotManager;
+import com.cloud.vm.snapshot.VMSnapshotVO;
+import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 @Local(value = VirtualMachineManager.class)
 public class VirtualMachineManagerImpl implements VirtualMachineManager, Listener {
@@ -227,6 +230,8 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     protected HypervisorGuruManager _hvGuruMgr;
     @Inject
     protected NetworkDao _networkDao;
+    @Inject
+    protected VMSnapshotDao _vmSnapshotDao;
 
     @Inject(adapter = DeploymentPlanner.class)
     protected Adapters<DeploymentPlanner> _planners;
@@ -236,6 +241,9 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
     @Inject
     protected ResourceManager _resourceMgr;
+    
+    @Inject 
+    protected VMSnapshotManager _vmSnapshotMgr = null;
 
     Map<VirtualMachine.Type, VirtualMachineGuru<? extends VMInstanceVO>> _vmGurus = new HashMap<VirtualMachine.Type, VirtualMachineGuru<? extends VMInstanceVO>>();
     protected StateMachine2<State, VirtualMachine.Event, VirtualMachine> _stateMachine;
@@ -1183,7 +1191,12 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             s_logger.debug("Unable to stop " + vm);
             return false;
         }
-
+        
+        if (!_vmSnapshotMgr.deleteAllVMSnapshots(vm.getId())){
+            s_logger.debug("Unable to delete all snapshots for " + vm);
+            return false;
+        }
+        
         try {
             if (!stateTransitTo(vm, VirtualMachine.Event.DestroyRequested, vm.getHostId())) {
                 s_logger.debug("Unable to destroy the vm because it is not in the correct state: " + vm);
@@ -1748,8 +1761,9 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             if (vm.isRemoved() || vm.getState() == State.Destroyed  || vm.getState() == State.Expunging) continue;
             AgentVmInfo info =  infos.remove(vm.getId());
             VMInstanceVO castedVm = null;
-            if ((info == null && (vm.getState() == State.Running || vm.getState() == State.Starting))  
-            		||  (info != null && (info.state == State.Running && vm.getState() == State.Starting))) 
+            if ((info == null && (vm.getState() == State.Running || vm.getState() == State.Starting || vm.getState() == State.Reverting))  
+            		||  (info != null && (info.state == State.Running && vm.getState() == State.Starting))
+					||  (info != null && (info.state == State.Running && vm.getState() == State.Reverting))) 
             {
             	s_logger.info("Found vm " + vm.getInstanceName() + " in inconsistent state. " + vm.getState() + " on CS while " +  (info == null ? "Stopped" : "Running") + " on agent");
                 info = new AgentVmInfo(vm.getInstanceName(), getVmGuru(vm), vm, State.Stopped);
@@ -2259,6 +2273,12 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
         Long clusterId = agent.getClusterId();
         long agentId = agent.getId();
+
+        
+        if (agent.getType() == Host.Type.Routing){
+            _vmSnapshotMgr.syncVolumePath(agent.getId());
+        }
+        
         if (agent.getHypervisorType() == HypervisorType.XenServer) { // only for Xen
         	StartupRoutingCommand startup = (StartupRoutingCommand) cmd;
         	HashMap<String, Pair<String, State>> allStates = startup.getClusterVMStateChanges();
@@ -2374,6 +2394,13 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         ServiceOfferingVO newServiceOffering = _offeringDao.findById(newServiceOfferingId);
         if (newServiceOffering == null) {
             throw new InvalidParameterValueException("Unable to find a service offering with id " + newServiceOfferingId);
+        }
+		
+        // Check that the VM has snapshots
+        List<VMSnapshotVO> vmSnapshotList = _vmSnapshotDao.findByVm(vmInstance.getId());
+        if (vmSnapshotList.size() != 0){
+            s_logger.error("Unable to upgrade virtual machine " + vmInstance.toString() + " due to: vm has vm snapshots");
+            throw new InvalidParameterValueException("Unable to upgrade virtual machine " + vmInstance.toString() + " due to: vm has vm snapshots");
         }
 
         // Check that the VM is stopped

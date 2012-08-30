@@ -67,6 +67,7 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.vm.BareMetalVmService;
 import com.cloud.vm.UserVmService;
+import com.cloud.vm.snapshot.VMSnapshotService;
 
 public abstract class BaseCmd {
     private static final Logger s_logger = Logger.getLogger(BaseCmd.class.getName());
@@ -138,6 +139,7 @@ public abstract class BaseCmd {
     public static VpcService _vpcService;
     public static NetworkACLService _networkACLService;
     public static Site2SiteVpnService _s2sVpnService;
+    public static VMSnapshotService _vmSnapshotService;
 
     static void setComponents(ResponseGenerator generator) {
         ComponentLocator locator = ComponentLocator.getLocator(ManagementService.Name);
@@ -168,6 +170,7 @@ public abstract class BaseCmd {
         _taggedResourceService = locator.getManager(TaggedResourceService.class);
         _vpcService = locator.getManager(VpcService.class);
         _networkACLService = locator.getManager(NetworkACLService.class);
+        _vmSnapshotService = locator.getManager(VMSnapshotService.class);
         _s2sVpnService = locator.getManager(Site2SiteVpnService.class);
     }
 

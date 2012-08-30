@@ -26,9 +26,11 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -61,9 +63,13 @@ import com.cloud.agent.api.Command;
 import com.cloud.agent.api.CreatePrivateTemplateFromSnapshotCommand;
 import com.cloud.agent.api.CreatePrivateTemplateFromVolumeCommand;
 import com.cloud.agent.api.CreateStoragePoolCommand;
+import com.cloud.agent.api.CreateVMSnapshotAnswer;
+import com.cloud.agent.api.CreateVMSnapshotCommand;
 import com.cloud.agent.api.CreateVolumeFromSnapshotAnswer;
 import com.cloud.agent.api.CreateVolumeFromSnapshotCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
+import com.cloud.agent.api.DeleteVMSnapshotAnswer;
+import com.cloud.agent.api.DeleteVMSnapshotCommand;
 import com.cloud.agent.api.GetDomRVersionAnswer;
 import com.cloud.agent.api.GetDomRVersionCmd;
 import com.cloud.agent.api.GetHostStatsAnswer;
@@ -74,6 +80,8 @@ import com.cloud.agent.api.GetVmStatsAnswer;
 import com.cloud.agent.api.GetVmStatsCommand;
 import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
+import com.cloud.agent.api.GetVolumesChangedAnswer;
+import com.cloud.agent.api.GetVolumesChangedCommand;
 import com.cloud.agent.api.HostStatsEntry;
 import com.cloud.agent.api.MaintainAnswer;
 import com.cloud.agent.api.MaintainCommand;
@@ -99,6 +107,8 @@ import com.cloud.agent.api.ReadyCommand;
 import com.cloud.agent.api.RebootAnswer;
 import com.cloud.agent.api.RebootCommand;
 import com.cloud.agent.api.RebootRouterCommand;
+import com.cloud.agent.api.RevertToSnapshotAnswer;
+import com.cloud.agent.api.RevertToSnapshotCommand;
 import com.cloud.agent.api.SetupAnswer;
 import com.cloud.agent.api.SetupCommand;
 import com.cloud.agent.api.SetupGuestNetworkAnswer;
@@ -134,8 +144,8 @@ import com.cloud.agent.api.routing.SetNetworkACLCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesAnswer;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
-import com.cloud.agent.api.routing.SetSourceNatCommand;
 import com.cloud.agent.api.routing.SetSourceNatAnswer;
+import com.cloud.agent.api.routing.SetSourceNatCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesAnswer;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
 import com.cloud.agent.api.routing.VmDataCommand;
@@ -245,9 +255,6 @@ import com.vmware.vim25.VirtualMachineGuestOsIdentifier;
 import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineRuntimeInfo;
 import com.vmware.vim25.VirtualSCSISharing;
-import com.xensource.xenapi.Connection;
-import com.xensource.xenapi.VIF;
-import com.xensource.xenapi.VM;
 
 public class VmwareResource implements StoragePoolResource, ServerResource, VmwareHostService {
     private static final Logger s_logger = Logger.getLogger(VmwareResource.class);
@@ -440,7 +447,15 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                 answer = execute((SetSourceNatCommand) cmd);
             } else if (clz == SetNetworkACLCommand.class) {
                 answer = execute((SetNetworkACLCommand) cmd);
-            } else if (clz == SetPortForwardingRulesVpcCommand.class) {
+            } else if (cmd instanceof GetVolumesChangedCommand) {
+            	return execute((GetVolumesChangedCommand)cmd);
+            } else if (cmd instanceof CreateVMSnapshotCommand) {
+            	return execute((CreateVMSnapshotCommand)cmd);
+            } else if(cmd instanceof DeleteVMSnapshotCommand){
+            	return execute((DeleteVMSnapshotCommand)cmd);
+            } else if(cmd instanceof RevertToSnapshotCommand){
+            	return execute((RevertToSnapshotCommand)cmd);
+        	}else if (clz == SetPortForwardingRulesVpcCommand.class) {
                 answer = execute((SetPortForwardingRulesVpcCommand) cmd);
             } else {
                 answer = Answer.createUnsupportedCommandAnswer(cmd);
@@ -481,6 +496,50 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         return answer;
     }
     
+    private Answer execute(GetVolumesChangedCommand cmd) {
+        Map<String, Map<String, VolumeTO>> vmVolumesMap = cmd.getVmVolumesMap();// {vmName:{volumeName:volumeTo}}
+        Set<String> vmNames = vmVolumesMap.keySet();
+        List<VolumeTO> volumeToList = new ArrayList<VolumeTO>();
+        try {
+            VmwareHypervisorHost hyperHost = getHyperHost(getServiceContext());
+            ClusterMO clusterMo = new ClusterMO(hyperHost.getContext(),
+                    ((HostMO) hyperHost).getParentMor());
+            for (String vmName : vmNames) {
+                Map<String, VolumeTO> volumeToMap = vmVolumesMap.get(vmName);
+                Collection<VolumeTO> volumeTos = volumeToMap.values();
+                VirtualMachineMO vmMo = clusterMo.findVmOnHyperHost(vmName);
+                if (vmMo == null) {
+                    s_logger.warn("vm " + vmName + " did not find");
+                }
+                VirtualDisk[] vdisks = vmMo.getAllDiskDevice();
+                for (int i = 0; i < vdisks.length; i++) {
+                    @SuppressWarnings("deprecation")
+                    List<Pair<String, ManagedObjectReference>> vmdkFiles = vmMo
+                            .getDiskDatastorePathChain(vdisks[i], false);
+                    vmMo.getConfigSummary().getNumVirtualDisks();
+                    for (Pair<String, ManagedObjectReference> fileItem : vmdkFiles) {
+                        String vmdkName = fileItem.first().split(" ")[1];
+                        vmdkName = vmdkName.substring(0, vmdkName.length() - 5);
+                        Iterator<VolumeTO> iter = volumeTos.iterator();
+                        while (iter.hasNext()) {
+                            VolumeTO volumeTo = iter.next();
+                            if (!volumeTo.getPath().equals(vmdkName)) {
+                                s_logger.warn("vm " + vmName + " has volume "
+                                        + volumeTo.getName() + " changed "
+                                        + volumeTo.getPath() + " -> "
+                                        + vmdkName);
+                                volumeTo.setPath(vmdkName);
+                                volumeToList.add(volumeTo);
+                            }
+                        }
+                    }
+                }
+            }
+            return new GetVolumesChangedAnswer(cmd, volumeToList);
+        } catch (Exception e) {
+            return new GetVolumesChangedAnswer(cmd, false, e.getMessage());
+        }
+    }
     protected Answer execute(CheckNetworkCommand cmd) {
         if (s_logger.isInfoEnabled()) {
             s_logger.info("Executing resource CheckNetworkCommand " + _gson.toJson(cmd));
@@ -3186,7 +3245,42 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         }
     }
 
+    protected Answer execute(CreateVMSnapshotCommand cmd) {
+        try {
+            VmwareContext context = getServiceContext();
+            VmwareManager mgr = context
+                    .getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
 
+            return mgr.getStorageManager().execute(this, cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CreateVMSnapshotAnswer(cmd, false, "");
+        }
+    }
+    
+    protected Answer execute(DeleteVMSnapshotCommand cmd) {
+        try {
+            VmwareContext context = getServiceContext();
+            VmwareManager mgr = context
+                    .getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
+
+            return mgr.getStorageManager().execute(this, cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new DeleteVMSnapshotAnswer(cmd, false, "");
+        }
+    }
+    
+    protected Answer execute(RevertToSnapshotCommand cmd){
+    	try{
+    		VmwareContext context = getServiceContext();
+			VmwareManager mgr = context.getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
+			return mgr.getStorageManager().execute(this, cmd);
+    	}catch (Exception e){
+    		e.printStackTrace();
+    		return new RevertToSnapshotAnswer(cmd,false,"");
+    	}
+    }
     protected Answer execute(CreateVolumeFromSnapshotCommand cmd) {
         if (s_logger.isInfoEnabled()) {
             s_logger.info("Executing resource CreateVolumeFromSnapshotCommand: " + _gson.toJson(cmd));

@@ -401,3 +401,9 @@ resetVpnConnection=com.cloud.api.commands.ResetVpnConnectionCmd;15
 listVpnCustomerGateways=com.cloud.api.commands.ListVpnCustomerGatewaysCmd;15
 listVpnGateways=com.cloud.api.commands.ListVpnGatewaysCmd;15
 listVpnConnections=com.cloud.api.commands.ListVpnConnectionsCmd;15
+
+### VM Snapshot commands
+listVMSnapshot=com.cloud.api.commands.ListVmSnapshotCmd;15
+createVMSnapshot=com.cloud.api.commands.CreateVMSnapshotCmd;15
+deleteVMSnapshot=com.cloud.api.commands.DeleteVMSnapshotCmd;15
+revertToSnapshot=com.cloud.api.commands.RevertToSnapshotCmd;15

@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.api;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -62,17 +63,17 @@ import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkProfile;
 import com.cloud.network.NetworkRuleConfigVO;
 import com.cloud.network.NetworkVO;
-import com.cloud.network.Site2SiteVpnGatewayVO;
-import com.cloud.network.Site2SiteCustomerGatewayVO;
 import com.cloud.network.Networks.TrafficType;
+import com.cloud.network.Site2SiteCustomerGatewayVO;
+import com.cloud.network.Site2SiteVpnGatewayVO;
 import com.cloud.network.dao.FirewallRulesCidrsDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkDomainDao;
 import com.cloud.network.dao.NetworkRuleConfigDao;
-import com.cloud.network.dao.Site2SiteVpnGatewayDao;
 import com.cloud.network.dao.Site2SiteCustomerGatewayDao;
+import com.cloud.network.dao.Site2SiteVpnGatewayDao;
 import com.cloud.network.security.SecurityGroup;
 import com.cloud.network.security.SecurityGroupManager;
 import com.cloud.network.security.SecurityGroupVO;
@@ -149,6 +150,11 @@ import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmData;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.vm.snapshot.VMSnapshot;
+import com.cloud.vm.snapshot.VMSnapshotVO;
+import com.cloud.vm.snapshot.VMSnapshotVolumeVO;
+import com.cloud.vm.snapshot.dao.VMSnapshotDao;
+import com.cloud.vm.snapshot.dao.VMSnapshotVolumeDao;
 
 public class ApiDBUtils {
     private static ManagementServer _ms;
@@ -206,7 +212,8 @@ public class ApiDBUtils {
     private static HighAvailabilityManager _haMgr;
     private static VpcManager _vpcMgr;
     private static TaggedResourceService _taggedResourceService;
-
+    private static VMSnapshotDao _vmSnapshotDao;
+    private static VMSnapshotVolumeDao _vmSnapshotVolumeDao;
     static {
         _ms = (ManagementServer) ComponentLocator.getComponent(ManagementServer.Name);
          ComponentLocator locator = ComponentLocator.getLocator(ManagementServer.Name);
@@ -790,7 +797,12 @@ public class ApiDBUtils {
     public static boolean canUseForDeploy(Network network) {
         return _networkMgr.canUseForDeploy(network);
     }
-    
+
+    public static VMSnapshot getVMSnapshotById(Long vmSnapshotId) {
+        VMSnapshot vmSnapshot = _vmSnapshotDao.findById(vmSnapshotId);
+        return vmSnapshot;
+    }
+
     public static String getUuid(String resourceId, TaggedResourceType resourceType) {
         return _taggedResourceService.getUuid(resourceId, resourceType);
     }

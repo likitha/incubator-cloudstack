@@ -78,6 +78,7 @@ import com.cloud.api.response.TemplateResponse;
 import com.cloud.api.response.TrafficTypeResponse;
 import com.cloud.api.response.UserResponse;
 import com.cloud.api.response.UserVmResponse;
+import com.cloud.api.response.VMSnapshotResponse;
 import com.cloud.api.response.VirtualRouterProviderResponse;
 import com.cloud.api.response.VlanIpRangeResponse;
 import com.cloud.api.response.VolumeResponse;
@@ -143,6 +144,7 @@ import com.cloud.user.UserAccount;
 import com.cloud.uservm.UserVm;
 import com.cloud.vm.InstanceGroup;
 import com.cloud.vm.VirtualMachine;
+import com.cloud.vm.snapshot.VMSnapshot;
 
 public interface ResponseGenerator {
     UserResponse createUserResponse(UserAccount user);
@@ -162,6 +164,7 @@ public interface ResponseGenerator {
     ConfigurationResponse createConfigurationResponse(Configuration cfg);
 
     SnapshotResponse createSnapshotResponse(Snapshot snapshot);
+    VMSnapshotResponse createVMSnapshotResponse(VMSnapshot vmSnapshot);
 
     SnapshotPolicyResponse createSnapshotPolicyResponse(SnapshotPolicy policy);
 
@@ -297,6 +300,8 @@ public interface ResponseGenerator {
      * @return
      */
     Long getIdentiyId(String tableName, String token);
+
+    VMSnapshot getVMSnapshotById(Long vmSnapshotId);
 
     /**
      * @param resourceTag

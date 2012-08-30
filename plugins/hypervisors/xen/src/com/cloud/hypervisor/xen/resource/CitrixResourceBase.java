@@ -77,9 +77,15 @@ import com.cloud.agent.api.Command;
 import com.cloud.agent.api.CreatePrivateTemplateFromSnapshotCommand;
 import com.cloud.agent.api.CreatePrivateTemplateFromVolumeCommand;
 import com.cloud.agent.api.CreateStoragePoolCommand;
+import com.cloud.agent.api.CreateVMSnapshotAnswer;
+import com.cloud.agent.api.CreateVMSnapshotCommand;
 import com.cloud.agent.api.CreateVolumeFromSnapshotAnswer;
 import com.cloud.agent.api.CreateVolumeFromSnapshotCommand;
+import com.cloud.agent.api.CreateVolumeFromVMSnapshotAnswer;
+import com.cloud.agent.api.CreateVolumeFromVMSnapshotCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
+import com.cloud.agent.api.DeleteVMSnapshotAnswer;
+import com.cloud.agent.api.DeleteVMSnapshotCommand;
 import com.cloud.agent.api.GetDomRVersionAnswer;
 import com.cloud.agent.api.GetDomRVersionCmd;
 import com.cloud.agent.api.GetHostStatsAnswer;
@@ -90,6 +96,8 @@ import com.cloud.agent.api.GetVmStatsAnswer;
 import com.cloud.agent.api.GetVmStatsCommand;
 import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
+import com.cloud.agent.api.GetVolumesChangedAnswer;
+import com.cloud.agent.api.GetVolumesChangedCommand;
 import com.cloud.agent.api.HostStatsEntry;
 import com.cloud.agent.api.MaintainAnswer;
 import com.cloud.agent.api.MaintainCommand;
@@ -116,6 +124,8 @@ import com.cloud.agent.api.ReadyCommand;
 import com.cloud.agent.api.RebootAnswer;
 import com.cloud.agent.api.RebootCommand;
 import com.cloud.agent.api.RebootRouterCommand;
+import com.cloud.agent.api.RevertToSnapshotAnswer;
+import com.cloud.agent.api.RevertToSnapshotCommand;
 import com.cloud.agent.api.SecurityGroupRuleAnswer;
 import com.cloud.agent.api.SecurityGroupRulesCmd;
 import com.cloud.agent.api.SetupAnswer;
@@ -178,6 +188,7 @@ import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.StaticNatRuleTO;
 import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.SwiftTO;
+import com.cloud.agent.api.to.VMSnapshotVolumeTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.exception.InternalErrorException;
@@ -238,6 +249,10 @@ import com.xensource.xenapi.Types;
 import com.xensource.xenapi.Types.BadServerResponse;
 import com.xensource.xenapi.Types.ConsoleProtocol;
 import com.xensource.xenapi.Types.IpConfigurationMode;
+import com.xensource.xenapi.Types.OperationNotAllowed;
+import com.xensource.xenapi.Types.SrFull;
+import com.xensource.xenapi.Types.VbdType;
+import com.xensource.xenapi.Types.VmBadPowerState;
 import com.xensource.xenapi.Types.VmPowerState;
 import com.xensource.xenapi.Types.XenAPIException;
 import com.xensource.xenapi.VBD;
@@ -553,8 +568,226 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             return execute((Site2SiteVpnCfgCommand) cmd);
         } else if (clazz == CheckS2SVpnConnectionsCommand.class) {
             return execute((CheckS2SVpnConnectionsCommand) cmd);
+        } else if (clazz == CreateVMSnapshotCommand.class) {
+            return execute((CreateVMSnapshotCommand)cmd);
+        } else if (clazz == DeleteVMSnapshotCommand.class) {
+            return execute((DeleteVMSnapshotCommand)cmd);
+        } else if (clazz == RevertToSnapshotCommand.class) {
+            return execute((RevertToSnapshotCommand)cmd);
+        } else if (clazz == CreateVolumeFromVMSnapshotCommand.class) {
+            return execute((CreateVolumeFromVMSnapshotCommand)cmd);
+        } else if (cmd instanceof GetVolumesChangedCommand) {
+            return execute((GetVolumesChangedCommand)cmd);
         } else {
             return Answer.createUnsupportedCommandAnswer(cmd);
+        }
+    }
+
+
+    private Answer execute(GetVolumesChangedCommand cmd) {
+        Map<String, Map<String, VolumeTO>> vmVolumesMap = cmd.getVmVolumesMap();// {vmName:{volumeName:volumeTo}}
+        Set<String> vmNames = vmVolumesMap.keySet();
+
+        Connection conn = getConnection();
+        List<VolumeTO> volumeToList = new ArrayList<VolumeTO>();
+
+        try {
+            Map<VM, VM.Record> vmRecords = VM.getAllRecords(conn);
+            Set<VM> vmSet = vmRecords.keySet();
+            for (VM vm : vmSet) {
+                String vmName = vm.getNameLabel(conn);
+                if (!vmNames.contains(vmName)) {
+                    continue;
+                }
+                Set<VBD> vbds = vmRecords.get(vm).VBDs;
+                Map<String, VolumeTO> volumeToMap = vmVolumesMap.get(vmName);
+                for (VBD vbd : vbds) {
+                    VBD.Record vbdr = vbd.getRecord(conn);
+                    if (vbdr.type == VbdType.DISK) {
+                        VDI vdi = vbdr.VDI;
+                        String deviceId = vbdr.userdevice;
+                        String vdiPath = vdi.getUuid(conn);
+                        VolumeTO volumeTo = volumeToMap.get(deviceId);
+                        String volumeName = volumeTo.getName();
+                        if (!volumeTo.getPath().equals(vdiPath)) {
+                            s_logger.warn("vm " + vmName + " has volume "
+                                    + volumeName + " changed "
+                                    + volumeTo.getPath() + " -> " + vdiPath);
+                            volumeTo.setPath(vdiPath);
+                            volumeToList.add(volumeTo);
+                        }
+                    }
+                }
+            }
+            return new GetVolumesChangedAnswer(cmd, volumeToList);
+        } catch (BadServerResponse e) {
+            return new GetVolumesChangedAnswer(cmd, false, e.getMessage());
+        } catch (XenAPIException e) {
+            return new GetVolumesChangedAnswer(cmd, false, e.getMessage());
+        } catch (XmlRpcException e) {
+            return new GetVolumesChangedAnswer(cmd, false, e.getMessage());
+        }
+    }
+
+    private Answer execute(CreateVolumeFromVMSnapshotCommand cmd) {
+        Connection conn = getConnection();
+        String vdiUUID = cmd.getPath();
+        String name = cmd.getName();
+        Boolean fullClone = cmd.getFullClone();
+        StorageFilerTO pool = cmd.getPool();
+        DiskProfile dskch = cmd.getDskch();
+
+        try {
+            VDI vdi = VDI.getByUuid(conn, vdiUUID);
+            VDI newVdi = null;
+            if (fullClone) {
+                newVdi = vdi.copy(conn, vdi.getSR(conn));
+            } else {
+                newVdi = vdi.createClone(conn, new HashMap<String, String>());
+            }
+            if (newVdi != null) {
+                newVdi.setNameLabel(conn, name);
+                VDI.Record vdir = newVdi.getRecord(conn);
+                VolumeTO vol = new VolumeTO(cmd.getVolumeId(), dskch.getType(),
+                        pool.getType(), pool.getUuid(), vdir.nameLabel,
+                        pool.getPath(), vdir.uuid, vdir.virtualSize, null);
+                return new CreateVolumeFromVMSnapshotAnswer(cmd, vol);
+            } else {
+                return new CreateVolumeFromVMSnapshotAnswer(cmd, false,
+                        "xenserver internal error");
+            }
+        } catch (BadServerResponse e) {
+            s_logger.error("create volume from vm snapshot failed due to "
+                    + e.getMessage());
+            return new CreateVolumeFromVMSnapshotAnswer(cmd, false,
+                    e.getMessage());
+        } catch (XenAPIException e) {
+            s_logger.error("create volume from vm snapshot failed due to "
+                    + e.getMessage());
+            return new CreateVolumeFromVMSnapshotAnswer(cmd, false,
+                    e.getMessage());
+        } catch (XmlRpcException e) {
+            s_logger.error("create volume from vm snapshot failed due to "
+                    + e.getMessage());
+            return new CreateVolumeFromVMSnapshotAnswer(cmd, false,
+                    e.getMessage());
+        }
+    }
+
+    private Answer execute(RevertToSnapshotCommand cmd) {
+        String vmName = cmd.getVmName();
+        List<VMSnapshotVolumeTO> listSnapshotVolumeTo = cmd
+                .getSnapshotVolumeTos();
+        Boolean snapshotMemory = cmd.memory();
+
+        Connection conn = getConnection();
+        Task task = null;
+        // List<VDI> oldVdiList = new ArrayList<VDI>();
+        // for (VMSnapshotVolumeTO snapshotVolumeTo : listSnapshotVolumeTo){
+        // String volumeUuid = snapshotVolumeTo.getVolumePath();
+        // try {
+        // oldVdiList.add(VDI.getByUuid(conn, volumeUuid));
+        // } catch (Types.UuidInvalid e){
+        // s_logger.warn("Unable to find vdi by uuid " + volumeUuid);
+        // } catch (Exception e){
+        // e.printStackTrace();
+        // }
+        // }
+        VirtualMachine.State vmState = VirtualMachine.State.Running;
+        boolean reverted = false;
+        VM vm = null;
+        try {
+
+            // remove vm from s_vms, for delta sync
+            s_vms.remove(_cluster, _name, vmName);
+            // check if snapshot contains memory
+            // if contains memory, check if snapshot vm exists
+            // else, check vm exists
+            VM vmSnapshot = VM.getByUuid(conn, cmd.getSnapshotUUID());
+            Set<VM> vms = VM.getByNameLabel(conn, vmName);
+            if (vms.size() == 0) {
+                vm = createWorkingVM(conn, vmName, "Other PV (64-bit)",
+                        listSnapshotVolumeTo);
+            } else if (vms.size() == 1) {
+                vm = getVM(conn, vmName);
+            } else {
+                String msg = "find more than 1 vm: " + vmName
+                        + " exists. error to revert";
+                s_logger.error(msg);
+                return new RevertToSnapshotAnswer(cmd, false, msg);
+            }
+            revertToSnapshot(conn, vmSnapshot, vmName, vm.getUuid(conn),
+                    snapshotMemory);
+            vm = getVM(conn, vmName);
+            Set<VBD> vbds = vm.getVBDs(conn);
+            Map<String, VDI> vdiMap = new HashMap<String, VDI>();
+            // get vdi:vbdr to a map
+            for (VBD vbd : vbds) {
+                VBD.Record vbdr = vbd.getRecord(conn);
+                if (vbdr.type == Types.VbdType.DISK) {
+                    VDI vdi = vbdr.VDI;
+                    vdiMap.put(vbdr.userdevice, vdi);
+                }
+            }
+
+            if (!snapshotMemory) {
+                vm.destroy(conn);
+                vmState = VirtualMachine.State.Stopped;
+            } else {
+                s_vms.put(_cluster, _name, vmName, State.Running);
+                vmState = VirtualMachine.State.Running;
+            }
+
+            for (VMSnapshotVolumeTO volumeTo : listSnapshotVolumeTo) {
+                Long deviceId = volumeTo.getDeviceId();
+                if (volumeTo.getDeviceId() != null) {
+                    VDI vdi = vdiMap.get(deviceId.toString());
+                    volumeTo.setNewVolumePath(vdi.getUuid(conn));
+                }
+            }
+
+            reverted = true;
+            return new RevertToSnapshotAnswer(cmd, listSnapshotVolumeTo,
+                    vmState);
+        } catch (XenAPIException e) {
+            reverted = false;
+            s_logger.error("revert vm " + vmName
+                    + " to snapshot failed due to " + e.getMessage());
+            return new RevertToSnapshotAnswer(cmd, false, e.getMessage());
+        } catch (Exception e) {
+            reverted = false;
+            s_logger.error("revert vm " + vmName
+                    + " to snapshot failed due to " + e.getMessage());
+            return new RevertToSnapshotAnswer(cmd, false, e.getMessage());
+        }
+    }
+
+    private void revertToSnapshot(Connection conn, VM vmSnapshot,
+            String vmName, String oldVmUuid, Boolean snapshotMemory)
+            throws XenAPIException, XmlRpcException {
+        // // revert
+        // Task task = vmSnapshot.revertAsync(conn);
+        // waitForTask(conn, task, 1000, 10 * 60 * 1000);
+        // checkForSuccess(conn, task);
+        // // finish revert to suspended
+        // // resume
+        // VM vm = getVM(conn, vmName);
+        // task = vm.resumeAsync(conn, false, true);
+        // waitForTask(conn, task, 1000, 10 * 60 * 1000);
+        // checkForSuccess(conn, task);
+        String results = callHostPluginAsync(conn, "vmopsSnapshot",
+                "revert_memory_snapshot", 10 * 60 * 1000, "snapshotUUID",
+                vmSnapshot.getUuid(conn), "vmName", vmName, "oldVmUuid",
+                oldVmUuid, "snapshotMemory", snapshotMemory.toString());
+        String errMsg = null;
+        if (results == null || results.isEmpty()) {
+            errMsg = "revert_memory_snapshot return null";
+        } else {
+            String[] tmp = results.split("#");
+            String status = tmp[0];
+            if (!status.equals("0")) {
+                errMsg = tmp[1];
+            }
         }
     }
 
@@ -6100,6 +6333,179 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
     }
 
+    protected Answer execute(final CreateVMSnapshotCommand cmd) {
+        String vmName = cmd.getVmName();
+        String vmSnapshotName = cmd.getSnapshotName();
+        List<VMSnapshotVolumeTO> listVSVolumeTo = cmd.getSnapshotVolumeTos();
+        VirtualMachine.State vmState = cmd.getVmState();
+        String guestOSType = cmd.getGuestOSType();
+
+        boolean snapshotMemory = cmd.snapshotMemory();
+        long timeout = 600;
+
+        Connection conn = getConnection();
+        HashMap<String, VDI> snapshotVDIMap = new HashMap<String, VDI>();
+        VM vm = null;
+        VM vmSnapshot = null;
+        boolean success = false;
+
+        try {
+            if (vmState == VirtualMachine.State.Stopped) {
+                vm = createWorkingVM(conn, vmName, guestOSType, listVSVolumeTo);
+            } else {
+                vm = getVM(conn, vmName);
+            }
+
+            if (vm == null) {
+                return new CreateVMSnapshotAnswer(cmd, false,
+                        "Creating VM Snapshot Failed due to can not find vm: "
+                                + vmName);
+            }
+            Task task = null;
+            if (!snapshotMemory) {
+                task = vm.snapshotAsync(conn, vmSnapshotName);
+            } else {
+                task = vm.checkpointAsync(conn, vmSnapshotName);
+            }
+            waitForTask(conn, task, 1000, timeout * 1000);
+            checkForSuccess(conn, task);
+            String result = task.getResult(conn);
+            String ref = result.substring("<value>".length(), result.length()
+                    - "</value>".length());
+            vmSnapshot = Types.toVM(ref);
+            Set<VBD> snapshotVbds = vmSnapshot.getVBDs(conn);
+            for (VBD vbd : snapshotVbds) {
+                VBD.Record vbdr = vbd.getRecord(conn);
+                if (vbdr.type == VbdType.DISK) {
+                    VDI vdi = vbdr.VDI;
+                    snapshotVDIMap.put(vbdr.userdevice, vdi);
+                }
+            }
+            for (VMSnapshotVolumeTO vsVolumeTo : listVSVolumeTo) {
+                String key = vsVolumeTo.getDeviceId().toString();
+                String volumePath = vsVolumeTo.getVolumePath();
+                VDI vdi = snapshotVDIMap.get(key);
+                vsVolumeTo.setSnapshotVolumePath(vdi.getUuid(conn));
+                vsVolumeTo.setNewVolumePath(volumePath);
+            }
+            String snapshotUUID = vmSnapshot.getUuid(conn);
+            success = true;
+            return new CreateVMSnapshotAnswer(cmd, snapshotUUID, listVSVolumeTo);
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            s_logger.error("Creating VM Snapshot Failed due to: " + msg);
+            return new CreateVMSnapshotAnswer(cmd, false, msg);
+        } finally {
+            try {
+                if (!success) {
+                    if (vmSnapshot != null) {
+                        s_logger.error("Delete exsisting VM Snapshot "
+                                + vmSnapshotName
+                                + " after making VolumeTO failed");
+                        Set<VBD> vbds = vmSnapshot.getVBDs(conn);
+                        for (VBD vbd : vbds) {
+                            VBD.Record vbdr = vbd.getRecord(conn);
+                            if (vbdr.type == VbdType.DISK) {
+                                VDI vdi = vbdr.VDI;
+                                vdi.destroy(conn);
+                            }
+                        }
+                        vmSnapshot.destroy(conn);
+                    }
+                }
+                if (vmState == VirtualMachine.State.Stopped) {
+                    if (vm != null) {
+                        vm.destroy(conn);
+                    }
+                }
+            } catch (Exception e2) {
+                s_logger.error("delete snapshot error due to "
+                        + e2.getMessage());
+            }
+        }
+    }
+    
+    private VM createWorkingVM(Connection conn, String vmName,
+            String guestOSType, List<VMSnapshotVolumeTO> snapshotVolumeTos)
+            throws BadServerResponse, VmBadPowerState, SrFull,
+            OperationNotAllowed, XenAPIException, XmlRpcException {
+        String guestOsTypeName = getGuestOsType(guestOSType, false);
+        if (guestOsTypeName == null) {
+            String msg = " Hypervisor " + this.getClass().getName()
+                    + " doesn't support guest OS type " + guestOSType
+                    + ". you can choose 'Other install media' to run it as HVM";
+            s_logger.warn(msg);
+            throw new CloudRuntimeException(msg);
+        }
+        VM template = getVM(conn, guestOsTypeName);
+        VM vm = template.createClone(conn, vmName);
+        vm.setIsATemplate(conn, false);
+        Map<VDI, VMSnapshotVolumeTO> vdiMap = new HashMap<VDI, VMSnapshotVolumeTO>();
+        for (VMSnapshotVolumeTO snapshotVolumeTo : snapshotVolumeTos) {
+            String vdiUuid = snapshotVolumeTo.getVolumePath();
+            try {
+                VDI vdi = VDI.getByUuid(conn, vdiUuid);
+                vdiMap.put(vdi, snapshotVolumeTo);
+            } catch (Types.UuidInvalid e) {
+                s_logger.warn("Unable to find vdi by uuid: " + vdiUuid
+                        + ", skip it");
+            }
+        }
+        for (VDI vdi : vdiMap.keySet()) {
+            VMSnapshotVolumeTO snapshotVolumeTo = vdiMap.get(vdi);
+            VBD.Record vbdr = new VBD.Record();
+            vbdr.VM = vm;
+            vbdr.VDI = vdi;
+            if (snapshotVolumeTo.getVolumeType() == Volume.Type.ROOT) {
+                vbdr.bootable = true;
+                vbdr.unpluggable = false;
+            } else {
+                vbdr.bootable = false;
+                vbdr.unpluggable = true;
+            }
+            vbdr.userdevice = snapshotVolumeTo.getDeviceId().toString();
+            vbdr.mode = Types.VbdMode.RW;
+            vbdr.type = Types.VbdType.DISK;
+            VBD.create(conn, vbdr);
+        }
+        return vm;
+    }
+
+    protected Answer execute(final DeleteVMSnapshotCommand cmd) {
+        String snapshotUUID = cmd.getSnapshotUUID();
+        Connection conn = getConnection();
+        List<VMSnapshotVolumeTO> snapshotVolumeToList = cmd
+                .getSnapshotVolumeTos();
+        try {
+            List<VDI> vdiList = new ArrayList<VDI>();
+            VM snapshot = VM.getByUuid(conn, snapshotUUID);
+            Set<VBD> vbds = snapshot.getVBDs(conn);
+            for (VBD vbd : vbds) {
+                if (vbd.getType(conn) == VbdType.DISK) {
+                    VDI vdi = vbd.getVDI(conn);
+                    vdiList.add(vdi);
+                }
+            }
+            snapshot.destroy(conn);
+            for (VDI vdi : vdiList) {
+                vdi.destroy(conn);
+            }
+            for (VMSnapshotVolumeTO snapshotVolume : snapshotVolumeToList) {
+                snapshotVolume.setNewVolumePath(snapshotVolume.getVolumePath());
+            }
+            return new DeleteVMSnapshotAnswer(cmd, snapshotVolumeToList);
+        } catch (Types.UuidInvalid e) {
+            s_logger.warn("No snapshot found by the uuid: " + snapshotUUID
+                    + ", snapshot not found or deleted");
+            return new DeleteVMSnapshotAnswer(cmd, true, "snapshot by uuid "
+                    + snapshotUUID + " not found, mark as removed");
+        } catch (Exception e) {
+            s_logger.warn("Catch Exception: " + e.getClass().toString()
+                    + " due to " + e.toString(), e);
+            return new DeleteVMSnapshotAnswer(cmd, false, e.getMessage());
+        }
+    }
+    
     protected Answer execute(final AttachIsoCommand cmd) {
         Connection conn = getConnection();
         boolean attach = cmd.isAttach();

@@ -198,6 +198,9 @@ import com.cloud.vm.dao.UserVmDaoImpl;
 import com.cloud.vm.dao.UserVmDetailsDaoImpl;
 import com.cloud.vm.dao.VMInstanceDaoImpl;
 
+import com.cloud.vm.snapshot.VMSnapshotManagerImpl;
+import com.cloud.vm.snapshot.dao.VMSnapshotDaoImpl;
+import com.cloud.vm.snapshot.dao.VMSnapshotVolumeDaoImpl;
 
 public class DefaultComponentLibrary extends ComponentLibraryBase implements ComponentLibrary {
     protected void populateDaos() {
@@ -337,6 +340,8 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addDao("Site2SiteVpnGatewayDao", Site2SiteVpnGatewayDaoImpl.class);
         addDao("Site2SiteCustomerGatewayDao", Site2SiteCustomerGatewayDaoImpl.class);
         addDao("Site2SiteVpnConnnectionDao", Site2SiteVpnConnectionDaoImpl.class);
+        addDao("VMSnapshotDao", VMSnapshotDaoImpl.class);
+        addDao("VMSnapshotVolumeDao", VMSnapshotVolumeDaoImpl.class);
     }
 
     @Override
@@ -395,6 +400,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addManager("NetworkACLManager", NetworkACLManagerImpl.class);
         addManager("TaggedResourcesManager", TaggedResourceManagerImpl.class);
         addManager("Site2SiteVpnManager", Site2SiteVpnManagerImpl.class);
+        addManager("VMSnapshot Manager", VMSnapshotManagerImpl.class);
     }
 
     @Override

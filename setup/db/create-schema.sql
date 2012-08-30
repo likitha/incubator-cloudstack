@@ -2363,5 +2363,51 @@ CREATE TABLE `cloud`.`nicira_nvp_nic_map` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `cloud`.`vm_snapshots` (
+  `id` bigint(20) unsigned NOT NULL auto_increment COMMENT 'Primary Key',
+  `uuid` varchar(40) NOT NULL,
+  `snapshot_uuid` varchar(40) default NULL,
+  `name` varchar(255) NOT NULL,
+  `display_name` varchar(255) default NULL,
+  `description` varchar(255) default NULL,
+  `vm_id` bigint(20) unsigned NOT NULL,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `service_offering_id` bigint(20) unsigned NOT NULL,
+  `domain_id` bigint(20) unsigned NOT NULL,
+  `memory` int(1) unsigned NOT NULL,
+  `state` varchar(32) NOT NULL,
+  `created` datetime default NULL,
+  `removed` datetime default NULL,
+  PRIMARY KEY  (`id`),
+  CONSTRAINT UNIQUE KEY `uc_vm_snapshots_uuid` (`uuid`),
+  INDEX `vm_snapshots_name` (`name`),
+  INDEX `vm_snapshots_vm_id` (`vm_id`),
+  INDEX `vm_snapshots_account_id` (`account_id`),
+  INDEX `vm_snapshots_display_name` (`display_name`),
+  INDEX `vm_snapshots_removed` (`removed`),
+  CONSTRAINT `fk_vm_snapshots_vm_id__vm_instance_id` FOREIGN KEY `fk_vm_snapshots_vm_id__vm_instance_id` (`vm_id`) REFERENCES `vm_instance` (`id`),
+  CONSTRAINT `fk_vm_snapshots_account_id__account_id` FOREIGN KEY `fk_vm_snapshots_account_id__account_id` (`account_id`) REFERENCES `account` (`id`),
+  CONSTRAINT `fk_vm_snapshots_service_offering_id__service_offering_id` FOREIGN KEY `fk_vm_snapshots_service_offering_id__service_offering_id` (`service_offering_id`) REFERENCES `service_offering` (`id`),
+  CONSTRAINT `fk_vm_snapshots_domain_id__domain_id` FOREIGN KEY `fk_vm_snapshots_domain_id__domain_id` (`domain_id`) REFERENCES `domain` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cloud`.`vm_snapshot_volume` (
+  `id` bigint(20) unsigned NOT NULL auto_increment COMMENT 'Primary Key',
+  `uuid` varchar(40) NOT NULL,
+  `volume_path` varchar(255) default NULL,
+  `vm_snapshot_id` bigint(20) unsigned NOT NULL,
+  `snapshot_of` bigint(20) unsigned NOT NULL,
+  `volume_type` varchar(10) NOT NULL,
+  `created` datetime default NULL,
+  `removed` datetime default NULL,
+  PRIMARY KEY  (`id`),
+  CONSTRAINT UNIQUE KEY `uc_vm_snapshot_volume_uuid` (`uuid`),
+  INDEX `i_vm_snapshot_volume__removed` (`removed`),
+  INDEX `i_vm_snapshot_volume__snapshot_of` (`snapshot_of`),
+  INDEX `i_vm_snapshot_volume__volume_type` (`volume_type`),
+  CONSTRAINT `fk_vm_snapshot_volume_id__vm_snapshots_id` FOREIGN KEY `fk_vm_snapshot_volume_id__vm_snapshots_id` (`vm_snapshot_id`) REFERENCES `vm_snapshots` (`id`),
+  CONSTRAINT `fk_vm_snapshot_snapshot_of__volumes_id` FOREIGN KEY `fk_vm_snapshot_snapshot_of__volumes_id` (`snapshot_of`) REFERENCES `volumes` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 SET foreign_key_checks = 1;
 

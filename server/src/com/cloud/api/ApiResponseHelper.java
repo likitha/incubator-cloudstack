@@ -99,6 +99,7 @@ import com.cloud.api.response.TemplateResponse;
 import com.cloud.api.response.TrafficTypeResponse;
 import com.cloud.api.response.UserResponse;
 import com.cloud.api.response.UserVmResponse;
+import com.cloud.api.response.VMSnapshotResponse;
 import com.cloud.api.response.VirtualRouterProviderResponse;
 import com.cloud.api.response.VlanIpRangeResponse;
 import com.cloud.api.response.VolumeResponse;
@@ -219,6 +220,7 @@ import com.cloud.vm.VmStats;
 import com.cloud.vm.dao.UserVmData;
 import com.cloud.vm.dao.UserVmData.NicData;
 import com.cloud.vm.dao.UserVmData.SecurityGroupData;
+import com.cloud.vm.snapshot.VMSnapshot;
 
 public class ApiResponseHelper implements ResponseGenerator {
 
@@ -576,6 +578,19 @@ public class ApiResponseHelper implements ResponseGenerator {
         return snapshotResponse;
     }
 
+    @Override
+    public VMSnapshotResponse createVMSnapshotResponse(VMSnapshot vmSnapshot) {
+        VMSnapshotResponse vmSnapshotResponse = new VMSnapshotResponse();
+        vmSnapshotResponse.setId(vmSnapshot.getId());
+        vmSnapshotResponse.setName(vmSnapshot.getName());
+        vmSnapshotResponse.setState(vmSnapshot.getState());
+        vmSnapshotResponse.setCreated(vmSnapshot.getCreated());
+        vmSnapshotResponse.setDescription(vmSnapshot.getDescription());
+        vmSnapshotResponse.setDisplayName(vmSnapshot.getDisplayName());
+        vmSnapshotResponse.setVmId(vmSnapshot.getvmId());
+        return vmSnapshotResponse;
+    }
+    
     @Override
     public SnapshotPolicyResponse createSnapshotPolicyResponse(SnapshotPolicy policy) {
         SnapshotPolicyResponse policyResponse = new SnapshotPolicyResponse();
@@ -3922,5 +3937,10 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setRemoved(result.getRemoved());
         response.setObjectName("vpnconnection");
         return response;
+    }
+
+    @Override
+    public VMSnapshot getVMSnapshotById(Long vmSnapshotId) {
+        return ApiDBUtils.getVMSnapshotById(vmSnapshotId);
     }
 }

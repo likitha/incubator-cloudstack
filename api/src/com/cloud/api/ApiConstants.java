@@ -205,6 +205,7 @@ public class ApiConstants {
     public static final String VM_AVAILABLE = "vmavailable";
     public static final String VM_LIMIT = "vmlimit";
     public static final String VM_TOTAL = "vmtotal";
+    public static final String VM_ID = "vmid";
     public static final String VNET = "vnet";
     public static final String VOLUME_ID = "volumeid";
     public static final String ZONE_ID = "zoneid";
@@ -381,6 +382,11 @@ public class ApiConstants {
     public static final String NICIRA_NVP_DEVICE_ID = "nvpdeviceid";
     public static final String NICIRA_NVP_TRANSPORT_ZONE_UUID = "transportzoneuuid";
     public static final String NICIRA_NVP_DEVICE_NAME = "niciradevicename";
+    public static final String VM_SNAPSHOT_DESCRIPTION = "description";
+    public static final String VM_SNAPSHOT_DISPLAYNAME = "name";
+    public static final String VM_SNAPSHOT_ID = "vmsnapshotid";
+    public static final String VM_SNAPSHOT_DISK_IDS = "vmsnapshotdiskids";
+    public static final String VM_SNAPSHOT_MEMORY = "snapshotmemory";
     
 
     public enum HostDetails {

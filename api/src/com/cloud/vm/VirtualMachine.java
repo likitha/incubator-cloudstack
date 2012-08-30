@@ -41,7 +41,8 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, Identity, S
         Migrating(true, "VM is being migrated.  host id holds to from host"),
         Error(false, "VM is in error"),
         Unknown(false, "VM state is unknown."),
-        Shutdowned(false, "VM is shutdowned from inside");
+        Shutdowned(false, "VM is shutdowned from inside"),
+        Reverting(true, "VM is reverting to snapshot");
 
         private final boolean _transitional;
         String _description;
@@ -109,6 +110,20 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, Identity, S
             s_fsm.addTransition(State.Expunging, VirtualMachine.Event.ExpungeOperation, State.Expunging);
             s_fsm.addTransition(State.Error, VirtualMachine.Event.DestroyRequested, State.Expunging);
             s_fsm.addTransition(State.Error, VirtualMachine.Event.ExpungeOperation, State.Expunging);
+            
+            s_fsm.addTransition(State.Reverting, VirtualMachine.Event.OperationFailed, State.Stopped);
+            s_fsm.addTransition(State.Reverting, VirtualMachine.Event.OperationSucceeded, State.Running);
+            s_fsm.addTransition(State.Running, VirtualMachine.Event.RevertingRequested, State.Reverting);
+            s_fsm.addTransition(State.Stopped, VirtualMachine.Event.RevertingRequested, State.Reverting);
+            s_fsm.addTransition(State.Reverting, VirtualMachine.Event.AgentReportRunning, State.Running);
+            s_fsm.addTransition(State.Reverting, VirtualMachine.Event.AgentReportStopped, State.Stopped);
+        }
+        
+        public static boolean isVmReverted(State oldState, Event e, State newState) {
+            if (oldState == State.Reverting && newState == State.Running) {
+                return true;
+            }
+            return false;
         }
 
         public static boolean isVmStarted(State oldState, Event e, State newState) {
@@ -172,7 +187,8 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, Identity, S
         OperationFailedToError,
         OperationRetry,
         AgentReportShutdowned,
-        AgentReportMigrated
+        AgentReportMigrated,
+        RevertingRequested
     };
 
     public enum Type {

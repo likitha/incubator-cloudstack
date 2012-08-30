@@ -205,6 +205,7 @@
             poll: pollAsyncJobResult
           }
         },
+
         destroy: {
           label: 'label.action.destroy.instance',
           messages: {
@@ -317,7 +318,7 @@
 
       detailView: {
         name: 'Instance details',
-        viewAll: { path: 'storage.volumes', label: 'label.volumes' },
+        viewAll: [{ path: 'storage.volumes', label: 'label.volumes' }, { path: 'vmsnapshots', label: 'VM Snapshots' } ],
         tabFilter: function(args) {
           var hiddenTabs = [];
           var zoneNetworktype;
@@ -485,6 +486,71 @@
               poll: pollAsyncJobResult
             }
           },
+
+          snapshot: {
+            messages: {
+              notification: function(args) {
+                return 'label.action.take.snapshot';
+              }
+            },
+            label: 'label.action.take.snapshot',
+            addRow: 'false',
+            createForm: {
+              title: 'label.action.take.snapshot',
+              fields: {
+                name: {
+                  label: 'label.name',
+                  isInput: true
+                },
+                description: {
+                  label: 'label.description',
+                  isTextarea: true
+                },
+                snapshotMemory: {
+                  label: 'snapshot.memory',
+                  isBoolean: true,
+                  isChecked: false
+                }
+              }
+            },
+            action: function(args) {
+              //hongtu
+              var array1 = [];
+              array1.push("&snapshotmemory=" + (args.data.snapshotMemory == "on"));
+              var displayname = args.data.name;
+              if (displayname != null && displayname.length > 0) {
+                array1.push("&name=" + todb(displayname));
+              }
+              var description = args.data.description;
+              if (description != null && description.length > 0) {
+                array1.push("&description=" + todb(description));
+              }
+              $.ajax({
+                url: createURL("createVMSnapshot&vmId=" + args.context.instances[0].id + array1.join("")),
+                dataType: "json",
+                async: true,
+                success: function(json) {
+                  var jid = json.createvmsnapshotresponse.jobid;
+                  args.response.success({
+                    _custom: {
+                      jobId: jid,
+                      getUpdatedItem: function(json) {
+                        return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+                      },
+                      getActionFilter: function() {
+                        return vmActionfilter;
+                      }
+                    }
+                  });
+                }
+              });
+          
+            },
+            notification: {
+              pool: pollAsyncJobResult
+            }
+          },          
+
           destroy: {
             label: 'label.action.destroy.instance',
             messages: {
@@ -1281,6 +1347,7 @@
     else if (jsonObj.state == 'Running') {     
       allowedActions.push("stop");
       allowedActions.push("restart");
+      allowedActions.push("snapshot");
       allowedActions.push("destroy");
       allowedActions.push("changeService");
 
@@ -1304,7 +1371,7 @@
       allowedActions.push("edit");
       allowedActions.push("start");
       allowedActions.push("destroy");
-
+      allowedActions.push("snapshot");
       if(isAdmin())
         allowedActions.push("migrateToAnotherStorage");
 

@@ -290,5 +290,10 @@ public class EventTypes {
     // tag related events
     public static final String EVENT_TAGS_CREATE = "CREATE_TAGS";
     public static final String EVENT_TAGS_DELETE = "DELETE_TAGS";
+    
+	// vm snapshot events
+    public static final String EVENT_VM_SNAPSHOT_CREATE = "VMSNAPSHOT.CREATE";
+    public static final String EVENT_VM_SNAPSHOT_DELETE = "VMSNAPSHOT.DELETE";
+    public static final String EVENT_VM_SNAPSHOT_REVERT = "VMSNAPSHOT.REVERT";
 
 }

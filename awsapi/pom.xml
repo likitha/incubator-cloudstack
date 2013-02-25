@@ -288,9 +288,10 @@
   <build>
     <defaultGoal>install</defaultGoal>
     <sourceDirectory>src</sourceDirectory>
-    <!--  Tests still depend on hibernate, 
-          so thats not going to work 
     <testSourceDirectory>test</testSourceDirectory>
+    <!--  S3 Tests still depend on hibernate, 
+          so thats not going to work 
+    <testSourceDirectory>test-s3</testSourceDirectory>
     -->
     <resources>
       <resource>

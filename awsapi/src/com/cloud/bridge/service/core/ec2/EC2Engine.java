@@ -38,6 +38,7 @@ import javax.naming.ConfigurationException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
@@ -174,7 +175,7 @@ public class EC2Engine extends ManagerBase {
      * 
      * @return
      */
-    private CloudStackApi getApi() {
+    public CloudStackApi getApi() {
         if (_eng == null) {
             _eng = new CloudStackApi(managementServer, cloudAPIPort, false);
         }
@@ -2437,7 +2438,7 @@ public class EC2Engine extends ManagerBase {
      * @param CloudStack VM state
      * @return Amazon Volume attachment state
      */
-    private String mapToAmazonVolumeAttachmentState (String vmState) {
+    public String mapToAmazonVolumeAttachmentState (String vmState) {
         if ( vmState.equalsIgnoreCase("Running") || vmState.equalsIgnoreCase("Stopping") ||
                 vmState.equalsIgnoreCase("Stopped") ) {
             return "attached";

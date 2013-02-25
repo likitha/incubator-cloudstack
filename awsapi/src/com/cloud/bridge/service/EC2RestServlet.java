@@ -162,6 +162,8 @@ public class EC2RestServlet extends HttpServlet {
     @Inject UserCredentialsDaoImpl ucDao;
     @Inject OfferingDaoImpl ofDao;
     @Inject CloudStackUserDaoImpl userDao;
+    @Inject EC2RestAuth restAuth;
+    @Inject ServiceProvider serviceProvider;
 
     public static final Logger logger = Logger.getLogger(EC2RestServlet.class);
 
@@ -679,7 +681,7 @@ public class EC2RestServlet extends HttpServlet {
         else { response.sendError(530, "Missing Device parameter" ); return; }
 
         // -> execute the request
-        AttachVolumeResponse EC2response = EC2SoapServiceImpl.toAttachVolumeResponse( ServiceProvider.getInstance().getEC2Engine().attachVolume( EC2request ));
+        AttachVolumeResponse EC2response = EC2SoapServiceImpl.toAttachVolumeResponse( serviceProvider.getEC2Engine().attachVolume( EC2request ));
         serializeResponse(response, EC2response);
     }
 
@@ -1910,7 +1912,6 @@ public class EC2RestServlet extends HttpServlet {
 
         // [C] Verify the signature
         //  -> getting the query-string in this way maintains its URL encoding
-        EC2RestAuth restAuth = new EC2RestAuth();
         restAuth.setHostHeader( request.getHeader( "Host" ));
         String requestUri = request.getRequestURI();
 

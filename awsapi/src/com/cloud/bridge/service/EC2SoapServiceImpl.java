@@ -119,7 +119,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
         AuthorizeSecurityGroupIngressType sgit = authorizeSecurityGroupIngress.getAuthorizeSecurityGroupIngress();        
         IpPermissionSetType ipPerms = sgit.getIpPermissions();
         
-        EC2AuthorizeRevokeSecurityGroup request = toSecurityGroup( sgit.getGroupName(), ipPerms.getItem());
+        EC2AuthorizeRevokeSecurityGroup request = toSecurityGroup( sgit.getAuthorizeSecurityGroupIngressTypeChoice_type0().getGroupName(), ipPerms.getItem());
 		return toAuthorizeSecurityGroupIngressResponse( engine.authorizeSecurityGroup( request ));
 	}
 
@@ -129,7 +129,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
         RevokeSecurityGroupIngressType sgit = revokeSecurityGroupIngress.getRevokeSecurityGroupIngress();        
         IpPermissionSetType ipPerms = sgit.getIpPermissions();
         
-        EC2AuthorizeRevokeSecurityGroup request = toSecurityGroup( sgit.getGroupName(), ipPerms.getItem());
+        EC2AuthorizeRevokeSecurityGroup request = toSecurityGroup( sgit.getRevokeSecurityGroupIngressTypeChoice_type0().getGroupName(), ipPerms.getItem());
 		return toRevokeSecurityGroupIngressResponse( engine.revokeSecurityGroup( request ));
 	}
 
@@ -456,7 +456,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
     public ReleaseAddressResponse releaseAddress(ReleaseAddress releaseAddress) {
     	EC2ReleaseAddress request = new EC2ReleaseAddress();
     	
-    	request.setPublicIp(releaseAddress.getReleaseAddress().getPublicIp());
+       request.setPublicIp(releaseAddress.getReleaseAddress().getReleaseAddressTypeChoice_type0().getPublicIp());
     	
         return toReleaseAddressResponse( engine.releaseAddress( request ) );
     }
@@ -465,8 +465,8 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
     public AssociateAddressResponse associateAddress(AssociateAddress associateAddress) {
     	EC2AssociateAddress request = new EC2AssociateAddress();
     	
-    	request.setPublicIp(associateAddress.getAssociateAddress().getPublicIp());
-    	request.setInstanceId(associateAddress.getAssociateAddress().getInstanceId());
+       request.setPublicIp(associateAddress.getAssociateAddress().getAssociateAddressTypeChoice_type0().getPublicIp());
+       request.setInstanceId(associateAddress.getAssociateAddress().getAssociateAddressTypeChoice_type1().getInstanceId());
     	
         return toAssociateAddressResponse( engine.associateAddress( request ) );
     }
@@ -2483,6 +2483,296 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 	}
 
 	public ResetSnapshotAttributeResponse resetSnapshotAttribute(ResetSnapshotAttribute resetSnapshotAttribute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ResetNetworkInterfaceAttributeResponse resetNetworkInterfaceAttribute(
+			ResetNetworkInterfaceAttribute resetNetworkInterfaceAttribute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateRouteTableResponse createRouteTable(
+			CreateRouteTable createRouteTable) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateNetworkAclEntryResponse createNetworkAclEntry(
+			CreateNetworkAclEntry createNetworkAclEntry) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeVolumeAttributeResponse describeVolumeAttribute(
+			DescribeVolumeAttribute describeVolumeAttribute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteNetworkInterfaceResponse deleteNetworkInterface(
+			DeleteNetworkInterface deleteNetworkInterface) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateInternetGatewayResponse createInternetGateway(
+			CreateInternetGateway createInternetGateway) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DisassociateRouteTableResponse disassociateRouteTable(
+			DisassociateRouteTable disassociateRouteTable) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ReplaceNetworkAclEntryResponse replaceNetworkAclEntry(
+			ReplaceNetworkAclEntry replaceNetworkAclEntry) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public AuthorizeSecurityGroupEgressResponse authorizeSecurityGroupEgress(
+			AuthorizeSecurityGroupEgress authorizeSecurityGroupEgress) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteNetworkAclEntryResponse deleteNetworkAclEntry(
+			DeleteNetworkAclEntry deleteNetworkAclEntry) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteRouteTableResponse deleteRouteTable(
+			DeleteRouteTable deleteRouteTable) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeNetworkInterfaceAttributeResponse describeNetworkInterfaceAttribute(
+			DescribeNetworkInterfaceAttribute describeNetworkInterfaceAttribute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateReservedInstancesListingResponse createReservedInstancesListing(
+			CreateReservedInstancesListing createReservedInstancesListing) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateNetworkAclResponse createNetworkAcl(
+			CreateNetworkAcl createNetworkAcl) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ModifyVolumeAttributeResponse modifyVolumeAttribute(
+			ModifyVolumeAttribute modifyVolumeAttribute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ReplaceNetworkAclAssociationResponse replaceNetworkAclAssociation(
+			ReplaceNetworkAclAssociation replaceNetworkAclAssociation) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public EnableVgwRoutePropagationResponse enableVgwRoutePropagation(
+			EnableVgwRoutePropagation enableVgwRoutePropagation) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public UnassignPrivateIpAddressesResponse unassignPrivateIpAddresses(
+			UnassignPrivateIpAddresses unassignPrivateIpAddresses) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteVpnConnectionRouteResponse deleteVpnConnectionRoute(
+			DeleteVpnConnectionRoute deleteVpnConnectionRoute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CancelReservedInstancesListingResponse cancelReservedInstancesListing(
+			CancelReservedInstancesListing cancelReservedInstancesListing) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeNetworkAclsResponse describeNetworkAcls(
+			DescribeNetworkAcls describeNetworkAcls) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public EnableVolumeIOResponse enableVolumeIO(EnableVolumeIO enableVolumeIO) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeInternetGatewaysResponse describeInternetGateways(
+			DescribeInternetGateways describeInternetGateways) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeReservedInstancesListingsResponse describeReservedInstancesListings(
+			DescribeReservedInstancesListings describeReservedInstancesListings) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeInstanceStatusResponse describeInstanceStatus(
+			DescribeInstanceStatus describeInstanceStatus) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ModifyNetworkInterfaceAttributeResponse modifyNetworkInterfaceAttribute(
+			ModifyNetworkInterfaceAttribute modifyNetworkInterfaceAttribute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DisableVgwRoutePropagationResponse disableVgwRoutePropagation(
+			DisableVgwRoutePropagation disableVgwRoutePropagation) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeVolumeStatusResponse describeVolumeStatus(
+			DescribeVolumeStatus describeVolumeStatus) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DetachNetworkInterfaceResponse detachNetworkInterface(
+			DetachNetworkInterface detachNetworkInterface) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeNetworkInterfacesResponse describeNetworkInterfaces(
+			DescribeNetworkInterfaces describeNetworkInterfaces) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CancelExportTaskResponse cancelExportTask(
+			CancelExportTask cancelExportTask) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateRouteResponse createRoute(CreateRoute createRoute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeRouteTablesResponse describeRouteTables(
+			DescribeRouteTables describeRouteTables) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteNetworkAclResponse deleteNetworkAcl(
+			DeleteNetworkAcl deleteNetworkAcl) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteRouteResponse deleteRoute(DeleteRoute deleteRoute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateVpnConnectionRouteResponse createVpnConnectionRoute(
+			CreateVpnConnectionRoute createVpnConnectionRoute) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public AttachInternetGatewayResponse attachInternetGateway(
+			AttachInternetGateway attachInternetGateway) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ReplaceRouteTableAssociationResponse replaceRouteTableAssociation(
+			ReplaceRouteTableAssociation replaceRouteTableAssociation) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public AssociateRouteTableResponse associateRouteTable(
+			AssociateRouteTable associateRouteTable) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DetachInternetGatewayResponse detachInternetGateway(
+			DetachInternetGateway detachInternetGateway) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DescribeExportTasksResponse describeExportTasks(
+			DescribeExportTasks describeExportTasks) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateInstanceExportTaskResponse createInstanceExportTask(
+			CreateInstanceExportTask createInstanceExportTask) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public AssignPrivateIpAddressesResponse assignPrivateIpAddresses(
+			AssignPrivateIpAddresses assignPrivateIpAddresses) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ReportInstanceStatusResponse reportInstanceStatus(
+			ReportInstanceStatus reportInstanceStatus) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public DeleteInternetGatewayResponse deleteInternetGateway(
+			DeleteInternetGateway deleteInternetGateway) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public AttachNetworkInterfaceResponse attachNetworkInterface(
+			AttachNetworkInterface attachNetworkInterface) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public CreateNetworkInterfaceResponse createNetworkInterface(
+			CreateNetworkInterface createNetworkInterface) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public RevokeSecurityGroupEgressResponse revokeSecurityGroupEgress(
+			RevokeSecurityGroupEgress revokeSecurityGroupEgress) {
+		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
+	}
+
+	@Override
+	public ReplaceRouteResponse replaceRoute(ReplaceRoute replaceRoute) {
 		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
 	}
 }

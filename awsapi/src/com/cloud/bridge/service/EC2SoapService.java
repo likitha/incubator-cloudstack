@@ -568,4 +568,344 @@ public class EC2SoapService implements AmazonEC2SkeletonInterface {
 			AmazonEC2SkeletonInterface ec2Service = ServiceProvider.getInstance().getServiceImpl(AmazonEC2SkeletonInterface.class);
 			return ec2Service.importVolume(importVolume);
 		}
+
+		@Override
+		public ResetNetworkInterfaceAttributeResponse resetNetworkInterfaceAttribute(
+				ResetNetworkInterfaceAttribute resetNetworkInterfaceAttribute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateRouteTableResponse createRouteTable(
+				CreateRouteTable createRouteTable) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateNetworkAclEntryResponse createNetworkAclEntry(
+				CreateNetworkAclEntry createNetworkAclEntry) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeVolumeAttributeResponse describeVolumeAttribute(
+				DescribeVolumeAttribute describeVolumeAttribute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteNetworkInterfaceResponse deleteNetworkInterface(
+				DeleteNetworkInterface deleteNetworkInterface) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateInternetGatewayResponse createInternetGateway(
+				CreateInternetGateway createInternetGateway) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DisassociateRouteTableResponse disassociateRouteTable(
+				DisassociateRouteTable disassociateRouteTable) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ReplaceNetworkAclEntryResponse replaceNetworkAclEntry(
+				ReplaceNetworkAclEntry replaceNetworkAclEntry) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public AuthorizeSecurityGroupEgressResponse authorizeSecurityGroupEgress(
+				AuthorizeSecurityGroupEgress authorizeSecurityGroupEgress) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteNetworkAclEntryResponse deleteNetworkAclEntry(
+				DeleteNetworkAclEntry deleteNetworkAclEntry) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteRouteTableResponse deleteRouteTable(
+				DeleteRouteTable deleteRouteTable) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeNetworkInterfaceAttributeResponse describeNetworkInterfaceAttribute(
+				DescribeNetworkInterfaceAttribute describeNetworkInterfaceAttribute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateReservedInstancesListingResponse createReservedInstancesListing(
+				CreateReservedInstancesListing createReservedInstancesListing) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateNetworkAclResponse createNetworkAcl(
+				CreateNetworkAcl createNetworkAcl) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ModifyVolumeAttributeResponse modifyVolumeAttribute(
+				ModifyVolumeAttribute modifyVolumeAttribute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ReplaceNetworkAclAssociationResponse replaceNetworkAclAssociation(
+				ReplaceNetworkAclAssociation replaceNetworkAclAssociation) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public EnableVgwRoutePropagationResponse enableVgwRoutePropagation(
+				EnableVgwRoutePropagation enableVgwRoutePropagation) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public UnassignPrivateIpAddressesResponse unassignPrivateIpAddresses(
+				UnassignPrivateIpAddresses unassignPrivateIpAddresses) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteVpnConnectionRouteResponse deleteVpnConnectionRoute(
+				DeleteVpnConnectionRoute deleteVpnConnectionRoute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CancelReservedInstancesListingResponse cancelReservedInstancesListing(
+				CancelReservedInstancesListing cancelReservedInstancesListing) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeNetworkAclsResponse describeNetworkAcls(
+				DescribeNetworkAcls describeNetworkAcls) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public EnableVolumeIOResponse enableVolumeIO(
+				EnableVolumeIO enableVolumeIO) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeInternetGatewaysResponse describeInternetGateways(
+				DescribeInternetGateways describeInternetGateways) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeReservedInstancesListingsResponse describeReservedInstancesListings(
+				DescribeReservedInstancesListings describeReservedInstancesListings) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeInstanceStatusResponse describeInstanceStatus(
+				DescribeInstanceStatus describeInstanceStatus) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ModifyNetworkInterfaceAttributeResponse modifyNetworkInterfaceAttribute(
+				ModifyNetworkInterfaceAttribute modifyNetworkInterfaceAttribute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DisableVgwRoutePropagationResponse disableVgwRoutePropagation(
+				DisableVgwRoutePropagation disableVgwRoutePropagation) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeVolumeStatusResponse describeVolumeStatus(
+				DescribeVolumeStatus describeVolumeStatus) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DetachNetworkInterfaceResponse detachNetworkInterface(
+				DetachNetworkInterface detachNetworkInterface) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeNetworkInterfacesResponse describeNetworkInterfaces(
+				DescribeNetworkInterfaces describeNetworkInterfaces) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CancelExportTaskResponse cancelExportTask(
+				CancelExportTask cancelExportTask) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateRouteResponse createRoute(CreateRoute createRoute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeRouteTablesResponse describeRouteTables(
+				DescribeRouteTables describeRouteTables) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteNetworkAclResponse deleteNetworkAcl(
+				DeleteNetworkAcl deleteNetworkAcl) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteRouteResponse deleteRoute(DeleteRoute deleteRoute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateVpnConnectionRouteResponse createVpnConnectionRoute(
+				CreateVpnConnectionRoute createVpnConnectionRoute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public AttachInternetGatewayResponse attachInternetGateway(
+				AttachInternetGateway attachInternetGateway) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ReplaceRouteTableAssociationResponse replaceRouteTableAssociation(
+				ReplaceRouteTableAssociation replaceRouteTableAssociation) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public AssociateRouteTableResponse associateRouteTable(
+				AssociateRouteTable associateRouteTable) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DetachInternetGatewayResponse detachInternetGateway(
+				DetachInternetGateway detachInternetGateway) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DescribeExportTasksResponse describeExportTasks(
+				DescribeExportTasks describeExportTasks) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateInstanceExportTaskResponse createInstanceExportTask(
+				CreateInstanceExportTask createInstanceExportTask) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public AssignPrivateIpAddressesResponse assignPrivateIpAddresses(
+				AssignPrivateIpAddresses assignPrivateIpAddresses) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ReportInstanceStatusResponse reportInstanceStatus(
+				ReportInstanceStatus reportInstanceStatus) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public DeleteInternetGatewayResponse deleteInternetGateway(
+				DeleteInternetGateway deleteInternetGateway) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public AttachNetworkInterfaceResponse attachNetworkInterface(
+				AttachNetworkInterface attachNetworkInterface) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public CreateNetworkInterfaceResponse createNetworkInterface(
+				CreateNetworkInterface createNetworkInterface) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public RevokeSecurityGroupEgressResponse revokeSecurityGroupEgress(
+				RevokeSecurityGroupEgress revokeSecurityGroupEgress) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ReplaceRouteResponse replaceRoute(ReplaceRoute replaceRoute) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 }

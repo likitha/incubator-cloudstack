@@ -936,6 +936,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             ProductCodesSetType param4 = new ProductCodesSetType();
             ProductCodesSetItemType param5 = new ProductCodesSetItemType();
             param5.setProductCode( "" );
+            param5.setType("");
             param4.addItem( param5 );            
             param3.setProductCodes( param4 );
             
@@ -1286,7 +1287,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             param3.setSnapshotId(snapId);
             param3.setAvailabilityZone( vol.getZoneName());
             param3.setStatus( vol.getState());
-            
+            param3.setVolumeType("standard");
             // -> CloudStack seems to have issues with timestamp formats so just in case
             Calendar cal = EC2RestAuth.parseDateString(vol.getCreated());
             if (cal == null) {
@@ -1371,11 +1372,13 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             if (null == groups || 0 == groups.length) {
                 GroupItemType param5 = new GroupItemType();
                 param5.setGroupId("");
+                param5.setGroupName("");
                 param4.addItem( param5 );
             } else {
                 for (EC2SecurityGroup group : groups) {
                     GroupItemType param5 = new GroupItemType();
                     param5.setGroupId(group.getId());
+                    param5.setGroupName("");
                     param4.addItem( param5 );
                 }
             }
@@ -1402,6 +1405,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             ProductCodesSetType param9 = new ProductCodesSetType();
             ProductCodesSetItemType param10 = new ProductCodesSetItemType();
             param10.setProductCode( "" );
+            param10.setType("");
             param9.addItem( param10 );
             param7.setProductCodes( param9 );
             
@@ -1438,7 +1442,13 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             param7.setRootDeviceType( "" );
             String devicePath = engine.cloudDeviceIdToDevicePath( inst.getHypervisor(), inst.getRootDeviceId());
             param7.setRootDeviceName( devicePath );
-            
+
+            GroupSetType param14 = new GroupSetType();
+            GroupItemType param15 = new GroupItemType(); // VPC security group
+            param15.setGroupName("");
+            param15.setGroupName("");
+            param14.addItem(param15);
+            param7.setGroupSet(param14);
 
             param7.setInstanceLifecycle( "" );
             param7.setSpotInstanceRequestId( "" );
@@ -1705,6 +1715,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             ProductCodesSetType param9 = new ProductCodesSetType();
             ProductCodesSetItemType param10 = new ProductCodesSetItemType();
             param10.setProductCode( "" );
+            param10.setType("");
             param9.addItem( param10 );
             param7.setProductCodes( param9 );
             

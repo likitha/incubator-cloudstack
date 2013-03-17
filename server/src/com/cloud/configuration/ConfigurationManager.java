@@ -149,6 +149,8 @@ public interface ConfigurationManager extends ConfigurationService, Manager {
      */
     boolean deleteVlanAndPublicIpRange(long userId, long vlanDbId, Account caller);
 
+    boolean releasePublicIpRange(long userId, long vlanDbId, Account caller);
+
     /**
      * Converts a comma separated list of tags to a List
      * 
@@ -210,7 +212,7 @@ public interface ConfigurationManager extends ConfigurationService, Manager {
 
     ClusterVO getCluster(long id);
 
-    boolean deleteAccountSpecificVirtualRanges(long accountId);
+    boolean releaseAccountSpecificVirtualRanges(long accountId);
 
     /**
      * Edits a pod in the database. Will not allow you to edit pods that are being used anywhere in the system.
